@@ -1,0 +1,4 @@
+# Baseline Profile inicial (reglas con comodines): precompila AOT las clases del launcher.
+# Para un perfil medido real, generar con un módulo Macrobenchmark (ver README → "Rendimiento").
+HSPLcom/tvlauncher/app/**->**(**)**
+Lcom/tvlauncher/app/**;

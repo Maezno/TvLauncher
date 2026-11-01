@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fondo oscuro desde el primer frame: sin flash blanco al volver al launcher. -->
+    <style name="Theme.TvLauncher" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/launcher_bg</item>
+        <item name="android:colorBackground">@color/launcher_bg</item>
+        <item name="android:navigationBarColor">@color/launcher_bg</item>
+        <item name="android:statusBarColor">@color/launcher_bg</item>
+    </style>
+</resources>

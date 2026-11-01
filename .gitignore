@@ -1,0 +1,17 @@
+# Gradle / Android
+.gradle/
+build/
+local.properties
+*.apk
+*.aab
+captures/
+.cxx/
+
+# IDE
+.idea/
+*.iml
+
+# Secretos de firma: NUNCA versionar
+keystore.properties
+*.jks
+*.keystore

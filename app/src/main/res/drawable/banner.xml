@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Banner TV 320x180 (placeholder: reemplazar por arte final 320x180 / 1280x720 PNG). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <path
+        android:fillColor="#FF0B0F1A"
+        android:pathData="M0,0h320v180h-320z" />
+    <path
+        android:fillColor="#FF4C8DFF"
+        android:pathData="M96,50h52a8,8 0 0 1 8,8v36a8,8 0 0 1 -8,8h-52a8,8 0 0 1 -8,-8v-36a8,8 0 0 1 8,-8z" />
+    <path
+        android:fillColor="#FF7A5CFF"
+        android:pathData="M172,50h52a8,8 0 0 1 8,8v36a8,8 0 0 1 -8,8h-52a8,8 0 0 1 -8,-8v-36a8,8 0 0 1 8,-8z" />
+    <path
+        android:fillColor="#FF2BD4A7"
+        android:pathData="M96,114h52a8,8 0 0 1 8,8v16a8,8 0 0 1 -8,8h-52a8,8 0 0 1 -8,-8v-16a8,8 0 0 1 8,-8z" />
+    <path
+        android:fillColor="#FFFFB547"
+        android:pathData="M172,114h52a8,8 0 0 1 8,8v16a8,8 0 0 1 -8,8h-52a8,8 0 0 1 -8,-8v-16a8,8 0 0 1 8,-8z" />
+</vector>

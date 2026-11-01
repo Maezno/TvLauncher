@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TV Launcher</string>
+    <string name="favorites">Favoritas</string>
+    <string name="all_apps">Todas las apps</string>
+    <string name="sort_label">Orden: %1$s</string>
+    <string name="sort_name">Nombre</string>
+    <string name="sort_most_used">Más usadas</string>
+    <string name="sort_recent">Recientes</string>
+    <string name="settings">Ajustes</string>
+    <string name="loading">Cargando aplicaciones…</string>
+    <string name="empty">No se encontraron aplicaciones</string>
+
+    <string name="menu_open">Abrir</string>
+    <string name="menu_pin">Agregar a favoritas</string>
+    <string name="menu_unpin">Quitar de favoritas</string>
+    <string name="menu_move_left">Mover antes</string>
+    <string name="menu_move_right">Mover después</string>
+    <string name="menu_hide">Ocultar del launcher</string>
+    <string name="menu_app_info">Info de la app / desinstalar</string>
+
+    <string name="settings_sort">Ordenar aplicaciones</string>
+    <string name="settings_hidden">Apps ocultas (seleccioná para mostrar)</string>
+    <string name="settings_no_hidden">No hay apps ocultas</string>
+    <string name="settings_show">Mostrar: %1$s</string>
+    <string name="settings_clear_usage">Borrar historial de uso</string>
+    <string name="settings_system">Ajustes del sistema</string>
+    <string name="settings_network">Ajustes de red</string>
+    <string name="settings_privacy_title">Privacidad</string>
+    <string name="settings_privacy_text">Este launcher no tiene acceso a Internet, ni publicidad, ni analíticas, ni cuentas. Las favoritas, el orden y los contadores de uso se guardan solo en este dispositivo y nunca salen de él.</string>
+    <string name="cannot_open">No se pudo abrir %1$s</string>
+</resources>
