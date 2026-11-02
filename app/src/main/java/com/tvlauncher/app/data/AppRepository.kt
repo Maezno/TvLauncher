@@ -11,6 +11,8 @@ import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Lista de apps lanzables. Todo el trabajo pesado (PackageManager, etiquetas) ocurre en IO;
@@ -47,7 +50,7 @@ class AppRepository(
             intent.data?.schemeSpecificPart?.let { _changedPackages.tryEmit(it) }
             debounceJob?.cancel()
             debounceJob = scope.launch {
-                delay(REFRESH_DEBOUNCE_MS) // una instalación dispara varios broadcasts
+                delay(REFRESH_DEBOUNCE_MS.milliseconds) // una instalación dispara varios broadcasts
                 load()
             }
         }
@@ -70,25 +73,31 @@ class AppRepository(
         _ready.value = true
     }
 
-    private fun query(): List<AppEntry> {
+    private suspend fun query(): List<AppEntry> = coroutineScope {
         val self = context.packageName
-        val tv = resolve(Intent.CATEGORY_LEANBACK_LAUNCHER)
-        val tvPackages = HashSet<String>(tv.size * 2)
-        tv.forEach { tvPackages.add(it.activityInfo.packageName) }
+        val tvInfoList = resolve(Intent.CATEGORY_LEANBACK_LAUNCHER)
+        val tvPackages = tvInfoList.mapTo(HashSet(tvInfoList.size * 2)) { it.activityInfo.packageName }
 
         // Apps pensadas para TV tienen prioridad; las de móvil solo aparecen si el paquete no tiene entrada TV.
-        val mobile = resolve(Intent.CATEGORY_LAUNCHER).filter { it.activityInfo.packageName !in tvPackages }
+        val mobileInfoList = resolve(Intent.CATEGORY_LAUNCHER).filter { it.activityInfo.packageName !in tvPackages }
 
-        val result = ArrayList<AppEntry>(tv.size + mobile.size)
-        tv.forEach { toEntry(it, leanback = true, self)?.let(result::add) }
-        mobile.forEach { toEntry(it, leanback = false, self)?.let(result::add) }
-        return result.distinctBy { it.key }
+        val tvDeferred = tvInfoList.map { info ->
+            async(Dispatchers.IO) { toEntry(info, leanback = true, self) }
+        }
+        val mobileDeferred = mobileInfoList.map { info ->
+            async(Dispatchers.IO) { toEntry(info, leanback = false, self) }
+        }
+
+        val result = ArrayList<AppEntry>(tvInfoList.size + mobileInfoList.size)
+        tvDeferred.forEach { d -> d.await()?.let(result::add) }
+        mobileDeferred.forEach { d -> d.await()?.let(result::add) }
+        result.distinctBy { it.key }
     }
 
     private fun toEntry(info: ResolveInfo, leanback: Boolean, self: String): AppEntry? {
         val ai = info.activityInfo ?: return null
         if (ai.packageName == self) return null
-        val label = info.loadLabel(pm)?.toString()?.trim().orEmpty().ifEmpty { ai.packageName }
+        val label = info.loadLabel(pm).toString().trim().ifEmpty { ai.packageName }
         return AppEntry(ai.packageName, ai.name, label, leanback)
     }
 

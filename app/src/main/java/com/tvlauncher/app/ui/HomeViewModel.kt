@@ -7,6 +7,7 @@ import com.tvlauncher.app.AppContainer
 import com.tvlauncher.app.data.AppEntry
 import com.tvlauncher.app.data.SortMode
 import com.tvlauncher.app.data.StoreSnapshot
+import com.tvlauncher.app.data.Usage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,11 +28,15 @@ data class HomeUiState(
     val pinned: List<AppEntry> = emptyList(),
     val apps: List<AppEntry> = emptyList(),
     val hiddenApps: List<AppEntry> = emptyList(),
+    val usage: Map<String, Usage> = emptyMap(),
+    val keyMappings: Map<Int, String> = emptyMap(),
+    val movingAppKey: String? = null,
 )
 
 sealed interface Overlay {
     data object None : Overlay
     data object Settings : Overlay
+    data object KeyMapping : Overlay
     data class Menu(val app: AppEntry) : Overlay
 }
 
@@ -39,12 +44,15 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
 
     private val store = container.store
 
+    private val _movingAppKey = MutableStateFlow<String?>(null)
+
     /** Ordenar/combinar ocurre en Dispatchers.Default; la UI recibe un estado inmutable ya listo. */
     val uiState: StateFlow<HomeUiState> = combine(
         container.repository.apps,
         container.repository.ready,
         store.snapshot,
-    ) { apps, ready, snap -> buildState(apps, ready, snap) }
+        _movingAppKey,
+    ) { apps, ready, snap, movingKey -> buildState(apps, ready, snap, movingKey) }
         .onEach { if (!it.loading) container.iconLoader.preload(it.pinned + it.apps) }
         .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
@@ -58,9 +66,31 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
 
     fun openMenu(app: AppEntry) { _overlay.value = Overlay.Menu(app) }
     fun openSettings() { _overlay.value = Overlay.Settings }
+    fun openKeyMapping() { _overlay.value = Overlay.KeyMapping }
     fun dismissOverlay() { _overlay.value = Overlay.None }
 
+    fun setKeyMapping(keyCode: Int, action: String) {
+        container.appScope.launch { store.setKeyMapping(keyCode, action) }
+    }
+
+    fun removeKeyMapping(keyCode: Int) {
+        container.appScope.launch { store.removeKeyMapping(keyCode) }
+    }
+
+    fun startMoving(app: AppEntry) {
+        _overlay.value = Overlay.None
+        _movingAppKey.value = app.key
+    }
+
+    fun stopMoving() {
+        _movingAppKey.value = null
+    }
+
     fun onHomePressed() {
+        if (_movingAppKey.value != null) {
+            _movingAppKey.value = null
+            return
+        }
         _overlay.value = Overlay.None
         _homeSignal.update { it + 1 }
     }
@@ -79,11 +109,17 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
     fun clearUsage() { container.appScope.launch { store.clearUsage() } }
 }
 
-private fun buildState(apps: List<AppEntry>, ready: Boolean, snap: StoreSnapshot): HomeUiState {
-    if (!ready) return HomeUiState(loading = true, sortMode = snap.sortMode)
+private val primaryCollator: Collator by lazy { Collator.getInstance().apply { strength = Collator.PRIMARY } }
 
-    val collator = Collator.getInstance().apply { strength = Collator.PRIMARY } // ignora mayúsculas y acentos
-    val byName = Comparator<AppEntry> { a, b -> collator.compare(a.label, b.label) }
+private fun buildState(
+    apps: List<AppEntry>,
+    ready: Boolean,
+    snap: StoreSnapshot,
+    movingKey: String?,
+): HomeUiState {
+    if (!ready) return HomeUiState(loading = true, sortMode = snap.sortMode, movingAppKey = movingKey)
+
+    val byName = Comparator<AppEntry> { a, b -> primaryCollator.compare(a.label, b.label) }
 
     val visible = apps.filter { it.key !in snap.hidden }
     val usage = snap.usage
@@ -115,5 +151,8 @@ private fun buildState(apps: List<AppEntry>, ready: Boolean, snap: StoreSnapshot
         pinned = pinned,
         apps = sorted,
         hiddenApps = hidden,
+        usage = usage,
+        keyMappings = snap.keyMappings,
+        movingAppKey = movingKey,
     )
 }

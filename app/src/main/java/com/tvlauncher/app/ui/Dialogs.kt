@@ -1,6 +1,9 @@
 package com.tvlauncher.app.ui
 
+import android.view.KeyEvent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,31 +17,31 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.tv.material3.ClickableSurfaceDefaults
-import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
-import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.tvlauncher.app.R
 import com.tvlauncher.app.data.AppEntry
 import com.tvlauncher.app.data.SortMode
 
-/**
- * Los paneles usan Dialog (ventana propia): el foco del D-pad queda atrapado dentro y no se escapa
- * a la grilla de abajo. Solo se crean cuando se abren, así que no cuestan nada en el home.
- */
 @Composable
 private fun PanelDialog(onDismiss: () -> Unit, width: Int, content: @Composable () -> Unit) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
@@ -69,12 +72,11 @@ private fun RequestFocusOnce(requester: FocusRequester) {
 @Composable
 fun AppMenuDialog(
     app: AppEntry,
-    pinnedIndex: Int,
-    pinnedCount: Int,
+    isPinned: Boolean,
     onDismiss: () -> Unit,
     onOpen: () -> Unit,
     onTogglePin: () -> Unit,
-    onMove: (Int) -> Unit,
+    onStartMove: () -> Unit,
     onHide: () -> Unit,
     onInfo: () -> Unit,
 ) {
@@ -91,12 +93,11 @@ fun AppMenuDialog(
             )
             PanelRow(stringResource(R.string.menu_open), onOpen, Modifier.focusRequester(first))
             PanelRow(
-                stringResource(if (pinnedIndex >= 0) R.string.menu_unpin else R.string.menu_pin),
+                stringResource(if (isPinned) R.string.menu_unpin else R.string.menu_pin),
                 onTogglePin,
             )
-            if (pinnedIndex > 0) PanelRow(stringResource(R.string.menu_move_left), { onMove(-1) })
-            if (pinnedIndex >= 0 && pinnedIndex < pinnedCount - 1) {
-                PanelRow(stringResource(R.string.menu_move_right), { onMove(1) })
+            if (isPinned) {
+                PanelRow(stringResource(R.string.menu_move), onStartMove)
             }
             PanelRow(stringResource(R.string.menu_hide), onHide)
             PanelRow(stringResource(R.string.menu_app_info), onInfo)
@@ -109,10 +110,13 @@ fun AppMenuDialog(
 fun SettingsDialog(
     sortMode: SortMode,
     hiddenApps: List<AppEntry>,
+    isDefaultLauncher: Boolean,
     onDismiss: () -> Unit,
     onSort: (SortMode) -> Unit,
     onUnhide: (AppEntry) -> Unit,
     onClearUsage: () -> Unit,
+    onSetDefaultLauncher: () -> Unit,
+    onOpenKeyMapping: () -> Unit,
     onSystem: () -> Unit,
     onNetwork: () -> Unit,
 ) {
@@ -150,6 +154,16 @@ fun SettingsDialog(
             }
 
             item { PanelTitle("") }
+            item {
+                PanelRow(
+                    text = stringResource(
+                        if (isDefaultLauncher) R.string.settings_default_launcher_yes
+                        else R.string.settings_default_launcher_no
+                    ),
+                    onClick = onSetDefaultLauncher,
+                )
+            }
+            item { PanelRow(stringResource(R.string.settings_key_mapping), onOpenKeyMapping) }
             item { PanelRow(stringResource(R.string.settings_clear_usage), onClearUsage) }
             item { PanelRow(stringResource(R.string.settings_network), onNetwork) }
             item { PanelRow(stringResource(R.string.settings_system), onSystem) }
@@ -169,36 +183,245 @@ fun SettingsDialog(
 }
 
 @Composable
+fun KeyMappingDialog(
+    allApps: List<AppEntry>,
+    currentMappings: Map<Int, String>,
+    onDismiss: () -> Unit,
+    onSaveMapping: (Int, String) -> Unit,
+    onRemoveMapping: (Int) -> Unit,
+    onOpenAccessibilitySettings: () -> Unit,
+) {
+    val first = remember { FocusRequester() }
+    var capturedKeyCode by remember { mutableIntStateOf(0) }
+    var capturedKeyName by remember { mutableStateOf("") }
+    var showDisclosure by remember { mutableStateOf(false) }
+
+    PanelDialog(onDismiss, width = 640) {
+        Column(
+            modifier = Modifier
+                .heightIn(max = 520.dp)
+                .onKeyEvent { keyEvent ->
+                    if (keyEvent.nativeKeyEvent.action == KeyEvent.ACTION_DOWN) {
+                        val code = keyEvent.nativeKeyEvent.keyCode
+                        // No capturar teclas esenciales de navegación del diálogo
+                        if (code != KeyEvent.KEYCODE_BACK && code != KeyEvent.KEYCODE_DPAD_CENTER &&
+                            code != KeyEvent.KEYCODE_DPAD_UP && code != KeyEvent.KEYCODE_DPAD_DOWN &&
+                            code != KeyEvent.KEYCODE_DPAD_LEFT && code != KeyEvent.KEYCODE_DPAD_RIGHT
+                        ) {
+                            capturedKeyCode = code
+                            capturedKeyName = KeyEvent.keyCodeToString(code).removePrefix("KEYCODE_")
+                            return@onKeyEvent true
+                        }
+                    }
+                    false
+                },
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.key_mapping_title),
+                style = MaterialTheme.typography.titleLarge,
+                color = Color.White,
+                modifier = Modifier.padding(start = 16.dp, bottom = 4.dp),
+            )
+
+            if (capturedKeyCode == 0) {
+                Text(
+                    text = stringResource(R.string.key_mapping_listening),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White,
+                    modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
+                )
+            } else {
+                Text(
+                    text = stringResource(R.string.key_mapping_btn_detected, capturedKeyName, capturedKeyCode),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White,
+                    modifier = Modifier.padding(start = 16.dp, bottom = 4.dp),
+                )
+                Text(
+                    text = stringResource(R.string.key_mapping_assign_action),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = LauncherColors.TextDim,
+                    modifier = Modifier.padding(start = 16.dp, bottom = 4.dp),
+                )
+
+                LazyColumn(
+                    modifier = Modifier.weight(1f, fill = false),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    item {
+                        PanelRow(
+                            text = "🏠  " + stringResource(R.string.key_mapping_action_home),
+                            onClick = {
+                                onSaveMapping(capturedKeyCode, "HOME")
+                                capturedKeyCode = 0
+                            },
+                            modifier = Modifier.focusRequester(first),
+                        )
+                    }
+                    items(allApps, key = { "map_app_" + it.key }) { app ->
+                        PanelRow(
+                            text = "▶  " + stringResource(R.string.key_mapping_action_app, app.label),
+                            onClick = {
+                                onSaveMapping(capturedKeyCode, "APP:" + app.packageName)
+                                capturedKeyCode = 0
+                            },
+                        )
+                    }
+                    item {
+                        PanelRow(
+                            text = "✖  " + stringResource(R.string.key_mapping_delete),
+                            onClick = {
+                                onRemoveMapping(capturedKeyCode)
+                                capturedKeyCode = 0
+                            },
+                        )
+                    }
+                }
+            }
+
+            PanelTitle(stringResource(R.string.key_mapping_current))
+            if (currentMappings.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.key_mapping_no_mappings),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = LauncherColors.TextDim,
+                    modifier = Modifier.padding(start = 16.dp, bottom = 4.dp),
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.heightIn(max = 120.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    items(currentMappings.entries.toList(), key = { it.key }) { entry ->
+                        val keyName = KeyEvent.keyCodeToString(entry.key).removePrefix("KEYCODE_")
+                        val actionDesc = when {
+                            entry.value == "HOME" -> stringResource(R.string.key_mapping_action_home)
+                            entry.value.startsWith("APP:") -> {
+                                val pkg = entry.value.removePrefix("APP:")
+                                allApps.find { it.packageName == pkg }?.label ?: pkg
+                            }
+                            else -> entry.value
+                        }
+                        PanelRow(
+                            text = stringResource(R.string.key_mapping_row, keyName, entry.key, actionDesc),
+                            onClick = { onRemoveMapping(entry.key) },
+                        )
+                    }
+                }
+            }
+
+            PanelRow(
+                text = "⚙  " + stringResource(R.string.key_mapping_service_enable),
+                // Política de Play: aviso destacado + consentimiento explícito ANTES de ir a Ajustes.
+                onClick = { showDisclosure = true },
+            )
+        }
+    }
+    RequestFocusOnce(first)
+
+    if (showDisclosure) {
+        AccessibilityDisclosureDialog(
+            onAccept = {
+                showDisclosure = false
+                onOpenAccessibilitySettings()
+            },
+            onDecline = { showDisclosure = false },
+        )
+    }
+}
+
+/**
+ * Aviso destacado (prominent disclosure) exigido por Google Play para usar la API de
+ * AccessibilityService con fines que no son de accesibilidad. Debe mostrarse dentro de la app,
+ * explicar qué hace el servicio y qué datos toca, y requerir una acción afirmativa del usuario.
+ */
+@Composable
+private fun AccessibilityDisclosureDialog(onAccept: () -> Unit, onDecline: () -> Unit) {
+    val first = remember { FocusRequester() }
+    PanelDialog(onDecline, width = 640) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = stringResource(R.string.a11y_disclosure_title),
+                style = MaterialTheme.typography.titleLarge,
+                color = Color.White,
+                modifier = Modifier.padding(start = 16.dp, bottom = 4.dp),
+            )
+            Text(
+                text = stringResource(R.string.a11y_disclosure_text),
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            )
+            PanelRow(
+                text = stringResource(R.string.a11y_disclosure_decline),
+                onClick = onDecline,
+                modifier = Modifier.focusRequester(first),
+            )
+            PanelRow(stringResource(R.string.a11y_disclosure_accept), onAccept)
+        }
+    }
+    RequestFocusOnce(first)
+}
+
+@Composable
 private fun PanelTitle(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleMedium,
         color = Color.White,
-        modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp),
+        modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp),
     )
 }
 
-@OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 private fun PanelRow(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(10.dp)),
-        colors = ClickableSurfaceDefaults.colors(
-            containerColor = Color.Transparent,
-            contentColor = Color.White,
-            focusedContainerColor = Color.White,
-            focusedContentColor = Color.Black,
-        ),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.02f),
+    var isFocused by remember { mutableStateOf(false) }
+    var keyPressedDownWhileFocused by remember { mutableStateOf(false) }
+    val openTime = remember { System.currentTimeMillis() }
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .onFocusChanged {
+                isFocused = it.isFocused
+                if (!it.isFocused) keyPressedDownWhileFocused = false
+            }
+            .onKeyEvent { keyEvent ->
+                val code = keyEvent.nativeKeyEvent.keyCode
+                if (code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER || code == KeyEvent.KEYCODE_NUMPAD_ENTER) {
+                    if (keyEvent.nativeKeyEvent.action == KeyEvent.ACTION_DOWN) {
+                        if (keyEvent.nativeKeyEvent.repeatCount == 0) {
+                            keyPressedDownWhileFocused = true
+                        }
+                    } else if (keyEvent.nativeKeyEvent.action == KeyEvent.ACTION_UP) {
+                        if (!keyPressedDownWhileFocused || (System.currentTimeMillis() - openTime < 350)) {
+                            return@onKeyEvent true
+                        }
+                    }
+                }
+                false
+            }
+            .clip(RoundedCornerShape(10.dp))
+            .background(if (isFocused) Color.White else Color.Transparent)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = {
+                    if (System.currentTimeMillis() - openTime >= 350 && keyPressedDownWhileFocused) {
+                        onClick()
+                    }
+                },
+            )
+            .padding(horizontal = 16.dp, vertical = 10.dp),
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
+            color = if (isFocused) Color.Black else Color.White,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
         )
     }
 }

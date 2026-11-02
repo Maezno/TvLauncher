@@ -19,7 +19,8 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        // CAMBIAR antes de publicar: el applicationId es permanente en Google Play.
+        // TODO(Play): CAMBIAR antes de la primera subida; el applicationId es permanente en Google Play
+        // (ej. com.tu_nombre.tvlauncher). El namespace puede quedarse como está.
         applicationId = "com.tvlauncher.app"
         minSdk = 24
         targetSdk = 36
@@ -51,7 +52,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            // Sin keystore.properties el AAB sale SIN firmar (Play lo rechaza de forma explícita);
+            // nunca se cae a la clave de debug, que Play también rechaza pero sin avisar en el build.
+            // Para instalar en el TV box sin keystore: ./gradlew assembleRelease -PsignWithDebug
             signingConfig = signingConfigs.findByName("release")
+                ?: signingConfigs.getByName("debug").takeIf { project.hasProperty("signWithDebug") }
         }
         debug {
             applicationIdSuffix = ".debug"

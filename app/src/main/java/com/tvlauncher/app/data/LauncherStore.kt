@@ -30,6 +30,7 @@ data class StoreSnapshot(
     val pinned: List<String> = emptyList(),
     val hidden: Set<String> = emptySet(),
     val usage: Map<String, Usage> = emptyMap(),
+    val keyMappings: Map<Int, String> = emptyMap(),
 )
 
 /**
@@ -87,6 +88,23 @@ class LauncherStore(context: Context) {
         ds.edit { p -> p[HIDDEN] = (p[HIDDEN] ?: emptySet()) - key }
     }
 
+    suspend fun setKeyMapping(keyCode: Int, action: String) {
+        ds.edit { p ->
+            val cur = p[KEY_MAPPINGS]?.lines()?.filter { it.contains(":") }?.toMutableList() ?: mutableListOf()
+            cur.removeAll { it.startsWith("$keyCode:") }
+            cur.add("$keyCode:$action")
+            p[KEY_MAPPINGS] = cur.joinToString("\n")
+        }
+    }
+
+    suspend fun removeKeyMapping(keyCode: Int) {
+        ds.edit { p ->
+            val cur = p[KEY_MAPPINGS]?.lines()?.filter { it.contains(":") }?.toMutableList() ?: mutableListOf()
+            cur.removeAll { it.startsWith("$keyCode:") }
+            p[KEY_MAPPINGS] = cur.joinToString("\n")
+        }
+    }
+
     suspend fun clearUsage() {
         ds.edit { p ->
             val names = p.asMap().keys.map { it.name }
@@ -111,11 +129,23 @@ class LauncherStore(context: Context) {
         }
         val usage = HashMap<String, Usage>(counts.size)
         for ((k, c) in counts) usage[k] = Usage(c, times[k] ?: 0L)
+
+        val mappings = HashMap<Int, String>()
+        this[KEY_MAPPINGS]?.lines()?.forEach { line ->
+            val parts = line.split(":", limit = 2)
+            if (parts.size == 2) {
+                parts[0].toIntOrNull()?.let { code ->
+                    mappings[code] = parts[1]
+                }
+            }
+        }
+
         return StoreSnapshot(
             sortMode = sort,
             pinned = this[PINNED].decodeList(),
             hidden = this[HIDDEN] ?: emptySet(),
             usage = usage,
+            keyMappings = mappings,
         )
     }
 
@@ -128,5 +158,6 @@ class LauncherStore(context: Context) {
         val SORT = stringPreferencesKey("sort")
         val PINNED = stringPreferencesKey("pinned")
         val HIDDEN = stringSetPreferencesKey("hidden")
+        val KEY_MAPPINGS = stringPreferencesKey("key_mappings")
     }
 }

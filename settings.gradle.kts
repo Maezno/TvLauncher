@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "TvLauncher"
 include(":app")
+include(":dummyapps")

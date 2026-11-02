@@ -15,3 +15,24 @@ captures/
 keystore.properties
 *.jks
 *.keystore
+keys/
+
+# Gradle / Kotlin (extra)
+.kotlin/
+*.hprof
+release/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Volcados de UI / capturas locales de depuración (uiautomator dump, screenrecord)
+tv_ui_*.xml
+*.mp4
+
+# Notas y prompts de trabajo con asistentes de IA (locales, no forman parte del proyecto)
+CONTEXT.md
+GEMINI_PROMPT.md
+PLAN_MEJORAS.md
+.claude/

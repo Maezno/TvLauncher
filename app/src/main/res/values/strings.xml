@@ -14,6 +14,7 @@
     <string name="menu_open">Open</string>
     <string name="menu_pin">Add to favorites</string>
     <string name="menu_unpin">Remove from favorites</string>
+    <string name="menu_move">Move favorite</string>
     <string name="menu_move_left">Move earlier</string>
     <string name="menu_move_right">Move later</string>
     <string name="menu_hide">Hide from launcher</string>
@@ -26,7 +27,34 @@
     <string name="settings_clear_usage">Clear usage history</string>
     <string name="settings_system">System settings</string>
     <string name="settings_network">Network settings</string>
+    <string name="settings_key_mapping">Remote button mapping</string>
+    <string name="key_mapping_title">Button mapping</string>
+    <string name="key_mapping_listening">Press a remote button…</string>
+    <string name="key_mapping_btn_detected">Button detected: %1$s (Code %2$d)</string>
+    <string name="key_mapping_assign_action">Assign action:</string>
+    <string name="key_mapping_action_home">Open Launcher Home</string>
+    <string name="key_mapping_action_app">Open %1$s</string>
+    <string name="key_mapping_delete">Remove mapping</string>
+    <string name="key_mapping_current">Current mappings:</string>
+    <string name="key_mapping_no_mappings">No custom buttons mapped</string>
+    <string name="key_mapping_service_enable">Enable accessibility service</string>
+    <string name="accessibility_service_desc">Allows intercepting and remapping remote control buttons system-wide.</string>
+    <string name="accessibility_service_summary">Remote control button mapping</string>
+    <string name="key_mapping_row">Button %1$s (%2$d) ➔ %3$s</string>
+    <string name="a11y_disclosure_title">Accessibility service use</string>
+    <string name="a11y_disclosure_text">To make remote buttons work even while you are in another app, TV Launcher uses the Android Accessibility Service API.
+
+The service only detects which physical remote button is pressed and runs the action you configured (open the home screen or an app). It does not read screen content or what you type, does not store key presses and does not send any data: the app has no Internet access.
+
+You can turn it off at any time in Settings › Accessibility.</string>
+    <string name="a11y_disclosure_accept">I agree, open Accessibility settings</string>
+    <string name="a11y_disclosure_decline">No, thanks</string>
+    <string name="settings_default_launcher_yes">✓ Default launcher: Yes</string>
+    <string name="settings_default_launcher_no">Set as default launcher</string>
     <string name="settings_privacy_title">Privacy</string>
     <string name="settings_privacy_text">This launcher has no Internet access, ads, analytics or accounts. Favorites, order and launch counts are stored only on this device and never leave it.</string>
     <string name="cannot_open">Couldn\'t open %1$s</string>
+
+    <string name="hero_never">Not opened yet</string>
+    <string name="hero_meta">Opened %1$s · %2$d times</string>
 </resources>

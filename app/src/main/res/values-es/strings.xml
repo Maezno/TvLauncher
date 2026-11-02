@@ -14,6 +14,7 @@
     <string name="menu_open">Abrir</string>
     <string name="menu_pin">Agregar a favoritas</string>
     <string name="menu_unpin">Quitar de favoritas</string>
+    <string name="menu_move">Mover de posición</string>
     <string name="menu_move_left">Mover antes</string>
     <string name="menu_move_right">Mover después</string>
     <string name="menu_hide">Ocultar del launcher</string>
@@ -26,7 +27,34 @@
     <string name="settings_clear_usage">Borrar historial de uso</string>
     <string name="settings_system">Ajustes del sistema</string>
     <string name="settings_network">Ajustes de red</string>
+    <string name="settings_key_mapping">Mapeo de botones del control</string>
+    <string name="key_mapping_title">Mapeo de botones</string>
+    <string name="key_mapping_listening">Presioná un botón del control remoto…</string>
+    <string name="key_mapping_btn_detected">Botón detectado: %1$s (Código %2$d)</string>
+    <string name="key_mapping_assign_action">Asignar acción:</string>
+    <string name="key_mapping_action_home">Abrir inicio del Launcher</string>
+    <string name="key_mapping_action_app">Abrir %1$s</string>
+    <string name="key_mapping_delete">Eliminar mapeo</string>
+    <string name="key_mapping_current">Mapeos actuales:</string>
+    <string name="key_mapping_no_mappings">No hay botones personalizados</string>
+    <string name="key_mapping_service_enable">Activar servicio de accesibilidad</string>
+    <string name="accessibility_service_desc">Permite interceptar y remapear botones del control remoto físico en cualquier momento.</string>
+    <string name="accessibility_service_summary">Mapeo de botones del control remoto</string>
+    <string name="key_mapping_row">Botón %1$s (%2$d) ➔ %3$s</string>
+    <string name="a11y_disclosure_title">Uso del servicio de accesibilidad</string>
+    <string name="a11y_disclosure_text">Para que los botones del control funcionen aunque estés en otra app, TV Launcher usa la API de servicio de accesibilidad de Android.
+
+El servicio solo detecta qué botón físico del control se pulsa y ejecuta la acción que configuraste (abrir el inicio o una app). No lee el contenido de la pantalla ni lo que escribís, no guarda las teclas pulsadas y no envía ningún dato: la app no tiene acceso a Internet.
+
+Podés desactivarlo cuando quieras en Ajustes › Accesibilidad.</string>
+    <string name="a11y_disclosure_accept">Acepto, ir a Ajustes de accesibilidad</string>
+    <string name="a11y_disclosure_decline">No, gracias</string>
+    <string name="settings_default_launcher_yes">✓ Launcher predeterminado: Sí</string>
+    <string name="settings_default_launcher_no">Establecer como launcher predeterminado</string>
     <string name="settings_privacy_title">Privacidad</string>
     <string name="settings_privacy_text">Este launcher no tiene acceso a Internet, ni publicidad, ni analíticas, ni cuentas. Las favoritas, el orden y los contadores de uso se guardan solo en este dispositivo y nunca salen de él.</string>
     <string name="cannot_open">No se pudo abrir %1$s</string>
+
+    <string name="hero_never">Todavía no la abriste</string>
+    <string name="hero_meta">Abierta %1$s · %2$d veces</string>
 </resources>
