@@ -19,9 +19,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        // TODO(Play): CAMBIAR antes de la primera subida; el applicationId es permanente en Google Play
-        // (ej. com.tu_nombre.tvlauncher). El namespace puede quedarse como está.
-        applicationId = "com.tvlauncher.app"
+        applicationId = "com.maez.aerolaunch"
         minSdk = 24
         targetSdk = 36
         versionCode = 1

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TV Launcher</string>
+    <string name="app_name">AeroLaunch</string>
     <string name="favorites">Favorites</string>
     <string name="all_apps">All apps</string>
     <string name="sort_label">Sort: %1$s</string>
@@ -42,7 +42,7 @@
     <string name="accessibility_service_summary">Remote control button mapping</string>
     <string name="key_mapping_row">Button %1$s (%2$d) ➔ %3$s</string>
     <string name="a11y_disclosure_title">Accessibility service use</string>
-    <string name="a11y_disclosure_text">To make remote buttons work even while you are in another app, TV Launcher uses the Android Accessibility Service API.
+    <string name="a11y_disclosure_text">To make remote buttons work even while you are in another app, AeroLaunch uses the Android Accessibility Service API.
 
 The service only detects which physical remote button is pressed and runs the action you configured (open the home screen or an app). It does not read screen content or what you type, does not store key presses and does not send any data: the app has no Internet access.
 

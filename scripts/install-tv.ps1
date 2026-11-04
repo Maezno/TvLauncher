@@ -10,6 +10,6 @@ $apk = "$PSScriptRoot\..\app\build\outputs\apk\release\app-release.apk"
 & $adb -s $Device install -r $apk
 # "speed" y no "speed-profile": recién instalada, el perfil está vacío (ProfileInstaller lo escribe
 # en el primer arranque) y speed-profile deja la app en "verify" igual.
-& $adb -s $Device shell cmd package compile -m speed -f com.tvlauncher.app
-& $adb -s $Device shell "am force-stop com.tvlauncher.app; am start -n com.tvlauncher.app/.MainActivity"
-& $adb -s $Device shell "dumpsys package dexopt | grep -A2 '\[com.tvlauncher.app\]'"
+& $adb -s $Device shell cmd package compile -m speed -f com.maez.aerolaunch
+& $adb -s $Device shell "am force-stop com.maez.aerolaunch; am start -n com.maez.aerolaunch/com.tvlauncher.app.MainActivity"
+& $adb -s $Device shell "dumpsys package dexopt | grep -A2 '\[com.maez.aerolaunch\]'"

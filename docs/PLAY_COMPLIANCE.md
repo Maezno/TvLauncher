@@ -1,4 +1,4 @@
-# Cumplimiento Google Play — TV Launcher
+# Cumplimiento Google Play — AeroLaunch
 
 Qué ya cumple el código, qué verificar y qué falta hacer en Play Console. Las políticas cambian: **antes de publicar, revisá el Policy Center** (https://play.google.com/about/developer-content-policy/) y la página de requisitos de Android TV.
 
@@ -44,7 +44,7 @@ Qué ya cumple el código, qué verificar y qué falta hacer en Play Console. La
    ```
    `bundleRelease` firma automáticamente si existe. Si no existe, el AAB sale **sin firmar** (ya no se usa la clave de debug como respaldo). Guardar la clave `.jks` de subida en un lugar seguro (y con copia de seguridad).
 9. **Pruebas cerradas (Closed Testing)**: Para cuentas nuevas de desarrollador, Google Play exige 20 testers internos durante 14 días.
-10. **ApplicationId ÚNICO**: Cambiar `com.tvlauncher.app` (en `app/build.gradle.kts`) por un nombre de paquete único (ej. `com.tunombre.tvlauncher`) **antes** de subir el primer AAB. No se puede modificar después.
+10. **ApplicationId**: definido como `com.maez.aerolaunch` (en `app/build.gradle.kts`). Es permanente desde la primera subida del AAB; el `namespace` interno `com.tvlauncher.app` puede quedar igual.
 
 ## 3. Puntos a verificar por el usuario
 - **Logos con Copyright en las Capturas**: Cuando tomes capturas de pantalla para la Play Store, **NO muestres logos de apps con copyright** (como Netflix, YouTube, Prime, etc.) porque los bots de Google rechazarán la app por Propiedad Intelectual. Utiliza las 20 apps de prueba generadas en `:dummyapps` para tomar unas capturas de pantalla 100% libres de derechos de autor.

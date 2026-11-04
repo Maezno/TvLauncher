@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TV Launcher</string>
+    <string name="app_name">AeroLaunch</string>
     <string name="favorites">Favoritas</string>
     <string name="all_apps">Todas las apps</string>
     <string name="sort_label">Orden: %1$s</string>
@@ -42,7 +42,7 @@
     <string name="accessibility_service_summary">Mapeo de botones del control remoto</string>
     <string name="key_mapping_row">Botón %1$s (%2$d) ➔ %3$s</string>
     <string name="a11y_disclosure_title">Uso del servicio de accesibilidad</string>
-    <string name="a11y_disclosure_text">Para que los botones del control funcionen aunque estés en otra app, TV Launcher usa la API de servicio de accesibilidad de Android.
+    <string name="a11y_disclosure_text">Para que los botones del control funcionen aunque estés en otra app, AeroLaunch usa la API de servicio de accesibilidad de Android.
 
 El servicio solo detecta qué botón físico del control se pulsa y ejecuta la acción que configuraste (abrir el inicio o una app). No lee el contenido de la pantalla ni lo que escribís, no guarda las teclas pulsadas y no envía ningún dato: la app no tiene acceso a Internet.
 
