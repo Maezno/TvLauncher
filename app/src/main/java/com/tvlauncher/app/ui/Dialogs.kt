@@ -31,6 +31,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -388,18 +389,17 @@ private fun PanelRow(text: String, onClick: () -> Unit, modifier: Modifier = Mod
                 isFocused = it.isFocused
                 if (!it.isFocused) keyPressedDownWhileFocused = false
             }
-            .onKeyEvent { keyEvent ->
+            // Preview: clickable consume la tecla antes que un onKeyEvent externo. Se descartan aquí
+            // las repeticiones y el soltar de una pulsación larga que empezó antes de abrir el panel.
+            .onPreviewKeyEvent { keyEvent ->
                 val code = keyEvent.nativeKeyEvent.keyCode
                 if (code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER || code == KeyEvent.KEYCODE_NUMPAD_ENTER) {
                     if (keyEvent.nativeKeyEvent.action == KeyEvent.ACTION_DOWN) {
                         if (keyEvent.nativeKeyEvent.repeatCount == 0) {
                             keyPressedDownWhileFocused = true
                         }
-                    } else if (keyEvent.nativeKeyEvent.action == KeyEvent.ACTION_UP) {
-                        if (!keyPressedDownWhileFocused || (System.currentTimeMillis() - openTime < 350)) {
-                            return@onKeyEvent true
-                        }
                     }
+                    return@onPreviewKeyEvent !keyPressedDownWhileFocused
                 }
                 false
             }
@@ -409,7 +409,7 @@ private fun PanelRow(text: String, onClick: () -> Unit, modifier: Modifier = Mod
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = {
-                    if (System.currentTimeMillis() - openTime >= 350 && keyPressedDownWhileFocused) {
+                    if (System.currentTimeMillis() - openTime >= 350) {
                         onClick()
                     }
                 },
