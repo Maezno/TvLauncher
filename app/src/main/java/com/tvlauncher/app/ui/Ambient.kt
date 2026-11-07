@@ -9,9 +9,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -21,6 +25,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlin.math.roundToInt
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Size
@@ -60,12 +66,22 @@ class Ambient internal constructor(internal val tint: State<Color>) {
     internal var screenSize = Size.Zero
 }
 
+/**
+ * El color se actualiza cuando el foco se queda quieto [AMBIENT_SETTLE_MS]: con pulsaciones
+ * seguidas no se recalcula en cada una, justo cuando el scroll necesita la GPU. El foco se lee en
+ * un snapshotFlow para que moverlo no recomponga a quien llama.
+ */
 @Composable
 fun rememberAmbient(focused: State<AppEntry?>): Ambient {
     val loader = LocalIconLoader.current
-    val key = focused.value?.key
-    val target = remember(key) { key?.let { loader.peek(it)?.tint }?.let { Color(it) } ?: DefaultTint }
-    val tint = animateColorAsState(target, tween(320), label = "ambientTint")
+    val target = remember { mutableStateOf(DefaultTint) }
+    LaunchedEffect(focused, loader) {
+        snapshotFlow { focused.value?.key }.collectLatest { key ->
+            delay(AMBIENT_SETTLE_MS)
+            target.value = key?.let { loader.peek(it)?.tint }?.let { Color(it) } ?: DefaultTint
+        }
+    }
+    val tint = animateColorAsState(target.value, tween(320), label = "ambientTint")
     return remember { Ambient(tint) }
 }
 
@@ -108,9 +124,10 @@ fun AmbientBackground(ambient: Ambient, modifier: Modifier = Modifier) {
  * Funde las filas que entran o salen por arriba y abajo de la grilla, sin capa offscreen:
  * encima de cada borde se dibuja el mismo fondo ambiental en [FADE_STEPS] franjas con opacidad
  * decreciente. Una capa offscreen del tamaño de la grilla duplicaba el trabajo de la GPU
- * (de ~17 a ~34 ms por frame en el Mi Box 4).
+ * (de ~17 a ~34 ms por frame en el Mi Box 4). Cada borde solo se funde si hay más contenido
+ * de ese lado: el inicio y el final de la lista quedan limpios.
  */
-fun Modifier.fadingEdges(ambient: Ambient, fade: Dp): Modifier = composed {
+fun Modifier.fadingEdges(ambient: Ambient, grid: LazyGridState, fade: Dp): Modifier = composed {
     val origin = remember { FloatArray(2) }
     this
         .onGloballyPositioned { c ->
@@ -127,6 +144,8 @@ fun Modifier.fadingEdges(ambient: Ambient, fade: Dp): Modifier = composed {
             val sy = AMBIENT_H / screen.height
             val fadePx = fade.toPx().coerceAtMost(size.height / 2f)
             val h = size.height.toInt()
+            val fadeTop = grid.canScrollBackward
+            val fadeBottom = grid.canScrollForward
             for (i in 0 until FADE_STEPS) {
                 // Franjas en píxeles enteros y contiguas: sin huecos ni solapes (evita líneas).
                 val y0 = (fadePx * i / FADE_STEPS).roundToInt()
@@ -135,8 +154,8 @@ fun Modifier.fadingEdges(ambient: Ambient, fade: Dp): Modifier = composed {
                 // Opacidad 1 en el borde, 0 hacia adentro (curva suave).
                 val a = 1f - (i + 0.5f) / FADE_STEPS
                 val alpha = a * a * (3f - 2f * a)
-                drawStrip(ambient, origin, sx, sy, top = y0, height = y1 - y0, alpha = alpha)
-                drawStrip(ambient, origin, sx, sy, top = h - y1, height = y1 - y0, alpha = alpha)
+                if (fadeTop) drawStrip(ambient, origin, sx, sy, top = y0, height = y1 - y0, alpha = alpha)
+                if (fadeBottom) drawStrip(ambient, origin, sx, sy, top = h - y1, height = y1 - y0, alpha = alpha)
             }
         }
 }
@@ -168,6 +187,7 @@ private fun DrawScope.drawStrip(
 private const val AMBIENT_W = 160
 private const val AMBIENT_H = 90
 private const val FADE_STEPS = 24
+private const val AMBIENT_SETTLE_MS = 180L
 
 @Composable
 fun FocusedInfo(focused: State<AppEntry?>, usage: Map<String, Usage>, modifier: Modifier = Modifier) {

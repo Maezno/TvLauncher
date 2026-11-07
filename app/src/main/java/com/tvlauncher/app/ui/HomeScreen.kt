@@ -8,9 +8,9 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.BringIntoViewSpec
@@ -82,13 +82,16 @@ private val LeanbackScrollEasing = CubicBezierEasing(0.2f, 0.0f, 0.2f, 1.0f)
 /**
  * BringIntoViewSpec estilo Google Play / Google TV Leanback:
  * - Pivot del 26% (alinea la fila activa con suficiente margen superior sin empujar la pantalla innecesariamente).
- * - Zona muerta (< 8px) para eliminar micro-saltos en desplazamientos horizontales.
- * - Interpolación de 110ms con la misma curva de frenado (más ágil, conserva el ease-out).
+ * - Zona muerta de 1px, nada más: la animación recalcula la distancia en cada frame, y con una
+ *   zona mayor frenaba antes de llegar; el tramo que faltaba lo completaba la siguiente tecla
+ *   lateral como un ajuste visible.
+ * - Interpolación de 110ms con curva de frenado. Un resorte de ~200 ms dio 7-10% de frames con
+ *   tirones en el Mi Box 4 con pulsaciones seguidas, contra ~1% de este tween.
  */
 @OptIn(ExperimentalFoundationApi::class)
 private val TvGridBringIntoViewSpec = object : BringIntoViewSpec {
     private val parentFraction = 0.26f
-    private val deadZonePx = 8f
+    private val deadZonePx = 1f
 
     @Suppress("DEPRECATION")
     override val scrollAnimationSpec: AnimationSpec<Float> = tween(
@@ -243,7 +246,7 @@ private fun HomeContent(
                 LazyVerticalGrid(
                     state = gridState,
                     columns = GridCells.Fixed(COLUMNS),
-                    modifier = Modifier.fillMaxWidth().weight(1f).fadingEdges(ambient, 64.dp),
+                    modifier = Modifier.fillMaxWidth().weight(1f).fadingEdges(ambient, gridState, 24.dp),
                     // Margen para que la tarjeta enfocada (escala 1.10) no choque con el borde.
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 32.dp),
                     horizontalArrangement = Arrangement.spacedBy(28.dp),

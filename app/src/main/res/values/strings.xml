@@ -42,11 +42,7 @@
     <string name="accessibility_service_summary">Remote control button mapping</string>
     <string name="key_mapping_row">Button %1$s (%2$d) ➔ %3$s</string>
     <string name="a11y_disclosure_title">Accessibility service use</string>
-    <string name="a11y_disclosure_text">To make remote buttons work even while you are in another app, AeroLaunch uses the Android Accessibility Service API.
-
-The service only detects which physical remote button is pressed and runs the action you configured (open the home screen or an app). It does not read screen content or what you type, does not store key presses and does not send any data: the app has no Internet access.
-
-You can turn it off at any time in Settings › Accessibility.</string>
+    <string name="a11y_disclosure_text">To make remote buttons work even while you are in another app, AeroLaunch uses the Android Accessibility Service API.\n\nThe service only detects which physical remote button is pressed and runs the action you configured (open the home screen or an app). It does not read screen content or what you type, does not store key presses and does not send any data: the app has no Internet access.\n\nYou can turn it off at any time in Settings › Accessibility.</string>
     <string name="a11y_disclosure_accept">I agree, open Accessibility settings</string>
     <string name="a11y_disclosure_decline">No, thanks</string>
     <string name="settings_default_launcher_yes">✓ Default launcher: Yes</string>

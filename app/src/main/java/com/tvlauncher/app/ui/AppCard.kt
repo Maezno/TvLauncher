@@ -181,21 +181,6 @@ fun AppCard(
                         longPressTriggered = false
                     }
                 }
-                .graphicsLayer {
-                    // Lectura diferida: la animación solo invalida la capa (draw), no la composición.
-                    val s = animatedScaleState.value
-                    scaleX = s
-                    scaleY = s
-                    transformOrigin = CardOrigin
-                }
-                .clip(CardShape)
-                .background(if (lifted) LauncherColors.CardFocused else LauncherColors.Card)
-                .drawWithContent {
-                    drawContent()
-                    if (lifted) {
-                        drawRect(Brush.linearGradient(SpecularColors, Offset.Zero, Offset(size.width * 0.7f, size.height)))
-                    }
-                }
                 .combinedClickable(
                     interactionSource = interactionSource,
                     indication = null,
@@ -214,6 +199,28 @@ fun AppCard(
                     },
                 ),
         ) {
+            // La escala va en una caja interna: el nodo con foco conserva su tamaño de layout, y el
+            // scroll (que sigue los límites del nodo enfocado) no persigue la tarjeta mientras crece.
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        // Lectura diferida: la animación solo invalida la capa (draw), no la composición.
+                        val s = animatedScaleState.value
+                        scaleX = s
+                        scaleY = s
+                        transformOrigin = CardOrigin
+                    }
+                    .clip(CardShape)
+                    .background(if (lifted) LauncherColors.CardFocused else LauncherColors.Card)
+                    .drawWithContent {
+                        drawContent()
+                        if (lifted) {
+                            drawRect(Brush.linearGradient(SpecularColors, Offset.Zero, Offset(size.width * 0.7f, size.height)))
+                        }
+                    }
+,
+            ) {
             AppImage(app)
             
             if (badge != null) {
@@ -242,6 +249,7 @@ fun AppCard(
                         color = Color.White,
                     )
                 }
+            }
             }
         }
         Text(
