@@ -214,7 +214,6 @@ private fun HomeContent(
     onStopMoving: () -> Unit,
 ) {
     val gridState = rememberLazyGridState()
-    val firstFocus = remember { FocusRequester() }
     val headerFocus = remember { FocusRequester() }
     val hasContent = !state.loading && state.apps.isNotEmpty()
 
@@ -231,7 +230,10 @@ private fun HomeContent(
         if (hasContent) {
             gridState.scrollToItem(0)
             androidx.compose.runtime.withFrameNanos { }
-            runCatching { firstFocus.requestFocus() }
+            // La primera tarjeta ya tiene su propio FocusRequester (el de la fila), así que se pide
+            // ese: firstFocus nunca llegaba a adjuntarse y el foco caía en el botón "Orden".
+            val first = pinnedRequesters.firstOrNull() ?: allAppsRequesters.firstOrNull()
+            runCatching { first?.requestFocus() }
         }
     }
 
@@ -288,7 +290,7 @@ private fun HomeContent(
                                 onClick = onLaunch,
                                 onLongClick = onMenu,
                                 modifier = cardModifier,
-                                focusRequester = if (index < pinnedRequesters.size) pinnedRequesters[index] else if (index == 0) firstFocus else null,
+                                focusRequester = if (index < pinnedRequesters.size) pinnedRequesters[index] else null,
                                 isMoving = isMoving,
                                 onMoveLeft = { onMovePinned(app, -1) },
                                 onMoveRight = { onMovePinned(app, 1) },
@@ -333,7 +335,7 @@ private fun HomeContent(
                             onClick = onLaunch,
                             onLongClick = onMenu,
                             modifier = cardModifier,
-                            focusRequester = if (index < allAppsRequesters.size) allAppsRequesters[index] else if (index == 0 && !pinnedFirst) firstFocus else null,
+                            focusRequester = if (index < allAppsRequesters.size) allAppsRequesters[index] else null,
                             onFocused = { focused.value = it },
                             badge = if (state.sortMode == SortMode.MOST_USED) {
                                 state.usage[app.key]?.count?.takeIf { it > 0 }?.let { "$it×" }
